@@ -141,7 +141,6 @@ return {
             invalidCode="Invalid code",
             invalidEmail="Invalid email",
             playerNotFound="Player not found",
-            noPassword="No password",
             invalidEmailPass="Invalid email or password",
             emailExists="Email exists",
             emailSendError="Email send error",
@@ -186,6 +185,7 @@ return {
     started="Playing",
     joinRoom="$1 has entered the room.",
     leaveRoom="$1 has left the room.",
+    roomRemoved="Room was removed",
     ready="Ready",
     spectating="Spectating",
 

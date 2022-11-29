@@ -15,7 +15,7 @@ end
 
 local scene={}
 
-function scene.sceneInit()
+function scene.enter()
     showEmail=false
     emailBox.secret=true
     emailBox:setText(USER.email)
@@ -23,8 +23,12 @@ function scene.sceneInit()
 end
 
 function scene.keyDown(key,rep)
-    if key~='return' or rep then return true end
-    _login()
+    if rep then return true end
+    if key=='return' then
+        _login()
+    else
+        return true
+    end
 end
 
 scene.widgetList={

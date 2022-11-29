@@ -8,7 +8,7 @@ local last1,last2-- Last touch/sound time
 local sfxPack=SETTING.sfxPack
 local vocPack=SETTING.vocPack
 
-function scene.sceneInit()
+function scene.enter()
     last1,last2=0,0
     sfxPack=SETTING.sfxPack
     vocPack=SETTING.vocPack
@@ -16,7 +16,7 @@ function scene.sceneInit()
     scene.widgetList.vocPack:reset()
     BG.set()
 end
-function scene.sceneBack()
+function scene.leave()
     saveSettings()
 end
 
@@ -74,9 +74,6 @@ function scene.draw()
     elseif vocPack=="miku" then
         gc.translate(700,320+12*sin(TIME()*.5))
         gc.draw(IMG.mikuCH,nil,nil,nil,.8)
-    elseif vocPack=="rin" then
-        gc.translate(820,280+12*sin(TIME()*.5))
-        gc.draw(IMG.rinCH,nil,nil,nil,.8)
     end
     gc.pop()
 end

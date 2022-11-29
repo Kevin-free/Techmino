@@ -141,7 +141,6 @@ return {
             invalidCode="無效驗證碼",
             invalidEmail="無效郵箱",
             playerNotFound="找不到玩家",
-            noPassword="未輸入密碼",
             invalidEmailPass="郵箱或密碼無效",
             emailExists="郵箱存在",
             emailSendError="郵箱發送錯誤",
@@ -186,6 +185,7 @@ return {
     started="遊戲中",
     joinRoom="$1 進入房間",
     leaveRoom="$1 離開房間",
+    roomRemoved="房間被解散",
     ready="準備！",
     spectating="旁觀中",
 
