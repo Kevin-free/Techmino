@@ -1,4 +1,3 @@
-local C=COLOR
 return {
     loadText={
         loadSFX="Load(SFX);",
@@ -17,6 +16,7 @@ return {
     playedLong="PlayedLong=true",
     playedTooMuch="PlayedTooMuch=true",
     settingWarn="SettingWarn();",
+    settingWarn2="SettingWarn2();",
 
     atkModeName={"Random();","Badges();","Kills();","Back();"},
     royale_remain="LeftPlayers=$1",
@@ -482,6 +482,8 @@ return {
             power="Set.Battery",
             clean="Set.QuickDraw",
             fullscreen="Set.Fullscreen",
+            portrait="Set.Portrait",
+            msaa="Set.MSAA",
 
             bg_on="Set.BG(Normal);",
             bg_off="Set.BG(Off);",
