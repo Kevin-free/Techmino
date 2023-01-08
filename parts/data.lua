@@ -248,7 +248,12 @@ end
         Press key 4 after 872 frame (52+872)
         ...
 ]]
+--[[
+    mark! DATA.dumpRecording(list,ptr)
+]]
 function DATA.dumpRecording(list,ptr)
+    -- print(type(list)=='table' and TABLE.dump(list) or tostring(list),"\n")
+    -- print("dumpRecording prt="..ptr.."\n")
     local out=""
     local buffer,buffer2=""
     if not ptr then ptr=1 end
@@ -292,8 +297,12 @@ function DATA.dumpRecording(list,ptr)
         -- Step
         ptr=ptr+2
     end
+    -- print("dumpRecording out..buffer="..out..buffer)
     return out..buffer,ptr
 end
+--[[
+    mark! DATA.pumpRecording(str,L)
+]]
 function DATA.pumpRecording(str,L)
     local len=#str
     local p=1

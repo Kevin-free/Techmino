@@ -225,8 +225,17 @@ function scene.gamepadUp(key)
         VK.release(k)
     end
 end
-
+--[[
+    mark! scene.update(dt)
+    the net_game rooter
+]]
 function scene.update(dt)
+    -- print("[scene.update] dt=", type(dt)=='table' and TABLE.dump(dt) or tostring(dt),"\n")
+    --[[
+        [scene.update]  0.01666945833334
+
+        [scene.update]  0.017082708333334
+    ]]
     if WS.status('game')~='running' then
         TASK.unlock('netPlaying')
         NET.ws_close()
@@ -244,11 +253,17 @@ function scene.update(dt)
             NET.freshRoomAllReady()
             return
         else
+            -- netPlaying always do here
+            -- print("dlog [scene.update] if playing else", playing)
+
             touchMoveLastFrame=false
             VK.update(dt)
 
             if #PLAYERS>0 then
                 -- Update players
+                --[[
+                    mark! call Player:update
+                ]]
                 for p=1,#PLAYERS do PLAYERS[p]:update(dt) end
 
                 local P1=PLAYERS[1]
@@ -263,12 +278,18 @@ function scene.update(dt)
                         ins(GAME.rep,P1.frameRun)
                         ins(GAME.rep,0)
                     end
+                    --[[
+                        mark! call DATA.dumpRecording
+                    ]]
                     stream,upstreamProgress=DATA.dumpRecording(GAME.rep,upstreamProgress)
                     if #stream%3==1 then
                         stream=stream.."\0\0"
                     elseif #stream%3==2 then
                         stream=stream.."\0\0\0\0"
                     end
+                    --[[
+                        mark! call NET.player_stream
+                    ]]
                     NET.player_stream(stream)
                     lastUpstreamTime=PLAYERS[1].alive and P1.frameRun or 1e99
                 end
@@ -278,6 +299,9 @@ function scene.update(dt)
         if not TASK.getLock('netPlaying') then
             NETPLY.update(dt)
         else
+            -- when spectate call here once
+            -- print("dlog [scene.update] else playing else", playing)
+
             playing=true
             TASK.lock('netPlaying')
             lastUpstreamTime=0
@@ -297,6 +321,9 @@ function scene.update(dt)
             NET.spectate=PLAYERS[1].uid~=USER.uid
             if NET.storedStream then
                 for i=1,#NET.storedStream do
+                    --[[
+                        mark! call NET.pumpStream
+                    ]]
                     NET.pumpStream(NET.storedStream[i])
                 end
                 NET.storedStream=false

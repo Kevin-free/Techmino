@@ -175,7 +175,9 @@ function Player:createSplashFX(h)
         end
     end
 end
+-- add garbage line
 function Player:createBeam(R,send)
+    -- print("dlog [Player:createBeam] reveiver", tostring(R.uid))
     if self.gameEnv.atkFX and self.cur then
         local C=self.cur
         local power=self.gameEnv.atkFX
@@ -822,9 +824,15 @@ function Player:ifoverlap(bk,x,y)
         end
     end
 end
+--[[ 
+    mark! attack
+    R: receiver of been attacked
+    send: the amount of add garbage line
+]]
 function Player:attack(R,send,time,line,fromStream)
     if GAME.net then
         if self.type=='human' then-- Local player attack others
+            -- print("dlog [Player:attack] +0x2 R.uid", tostring(R.uid))
             ins(GAME.rep,self.frameRun)
             ins(GAME.rep,
                 R.sid+
@@ -833,9 +841,11 @@ function Player:attack(R,send,time,line,fromStream)
                 line*0x100000000+
                 0x2000000000000
             )
-            self:createBeam(R,send)
+            -- attacking, add garbage line to the receiver 
+            self:createBeam(R,send) -- add garbage line
         end
         if fromStream and R.type=='human' then-- Local player receiving lines
+            -- print("dlog [Player:attack] +0x1 R.uid", tostring(R.uid))
             ins(GAME.rep,R.frameRun)
             ins(GAME.rep,
                 self.sid+
@@ -844,6 +854,7 @@ function Player:attack(R,send,time,line,fromStream)
                 line*0x100000000+
                 0x1000000000000
             )
+            -- been attacked, 
             R:receive(self,send,time,line)
         end
     else
@@ -851,7 +862,10 @@ function Player:attack(R,send,time,line,fromStream)
         self:createBeam(R,send)
     end
 end
+-- mark! receive 
+-- receive line from Attacker
 function Player:receive(A,send,time,line)
+    -- print("dlog [Player:receive] receiver", tostring(A.uid))
     self.lastRecv=A
     local B=self.atkBuffer
     if send+self.atkBufferSum>self.gameEnv.bufferLimit then
@@ -1608,7 +1622,7 @@ do
             finesseList[k]=finesseList[v]
         end
     end
-
+    -- mark! Player:drop(autoLock)
     function Player:drop(autoLock)
         local _
         local CHN=VOC.getFreeChannel()
@@ -1942,6 +1956,7 @@ do
                         T=randomTarget(self)
                     end
                     if T then
+                        -- mark! call attack Target
                         self:attack(T,send,sendTime,generateLine(self.atkRND:random(10)))
                     end
                 end
@@ -2361,6 +2376,8 @@ local function _updateFX(P,dt)
         end
     end
 end
+-- mark! call :drop
+-- update the event of player alive (self field)
 local function update_alive(P,dt)
     local ENV=P.gameEnv
 
@@ -2581,6 +2598,7 @@ local function update_alive(P,dt)
                 if P.lockDelay>=0 then
                     goto THROW_stop
                 end
+                -- mark! 
                 P:drop(true)
                 if P.bot then
                     P.bot:lockWrongPlace()
@@ -2611,20 +2629,28 @@ local function update_alive(P,dt)
         )
     ]]
 end
+--[[
+    mark! update_streaming(P)
+    update the event of player's stream (others field)
+]]
 local function update_streaming(P)
     local eventTime=P.stream[P.streamProgress]
     while eventTime and P.frameRun==eventTime do
         local event=P.stream[P.streamProgress+1]
+        -- -- print("dlog [update_streaming] event=", tostring(event))
         if event==0 then-- Just wait
         elseif event<=32 then-- Press key
             P:pressKey(event)
         elseif event<=64 then-- Release key
             P:releaseKey(event-32)
         elseif event>0x2000000000000 then-- Sending lines
-            local sid=event%0x100
-            local amount=int(event/0x100)%0x100
-            local time=int(event/0x10000)%0x10000
-            local line=int(event/0x100000000)%0x10000
+            -- 被攻击时
+            -- print("dlog [update_streaming] event>0x2000000000000", tostring(event))
+            local sid=event%0x100 -- 
+            local amount=int(event/0x100)%0x100 -- 垃圾行数
+            local time=int(event/0x10000)%0x10000 -- 
+            local line=int(event/0x100000000)%0x10000 -- 
+            -- print("dlog [update_streaming] sid=", tostring(sid))
             for _,p in next,PLY_ALIVE do
                 if p.sid==sid then
                     P.netAtk=P.netAtk+amount
@@ -2634,21 +2660,43 @@ local function update_streaming(P)
                         P:lose(true)
                         return
                     end
+                    -- mark! call attck fromStream
                     P:attack(p,amount,time,line,true)
-                    P:createBeam(p,amount)
+            -- -- print("dlog [update_streaming] p=", type(p)=='table' and TABLE.dump(p) or tostring(p))
+            -- print("dlog [update_streaming] p.uid=", tostring(p.uid))
+            -- print("dlog [update_streaming] amount=", amount, ", time=", time, ", line=", line)
+            --[[
+dlog [update_streaming] event=  5.6727499171482e+14
+dlog [update_streaming] event>0x2000000000000   5.6727499171482e+14
+dlog [update_streaming] sid=    1
+dlog [update_streaming] p.uid=  7494
+dlog [update_streaming] amount= 2       , time= 95      , line= 1007
+            ]]
+                    P:createBeam(p,amount) -- 增加垃圾行
                     break
                 end
             end
         elseif event>0x1000000000000 then-- Receiving lines
+            -- 攻击时
+            -- print("dlog [update_streaming] event>0x1000000000000", tostring(event))
             local sid=event%0x100
+            local amount=int(event/0x100)%0x100
+            local time=int(event/0x10000)%0x10000
+            local line=int(event/0x100000000)%0x10000
+            -- print("dlog [update_streaming] sid=", tostring(sid))
             for _,p in next,PLY_ALIVE do
                 if p.sid==sid then
-                    P:receive(
-                        p,
-                        int(event/0x100)%0x100,-- amount
-                        int(event/0x10000)%0x10000,-- time
-                        int(event/0x100000000)%0x10000-- line
-                    )
+                    P:receive(p,amount,time,line)
+            -- -- print("dlog [update_streaming] p=", type(p)=='table' and TABLE.dump(p) or tostring(p))
+            -- print("dlog [update_streaming] p.uid=", tostring(p.uid))
+            -- print("dlog [update_streaming] amount=", amount, ", time=", time, ", line=", line)
+            --[[
+dlog [update_streaming] event=  2.8585155395687e+14
+dlog [update_streaming] event>0x1000000000000   2.8585155395687e+14
+dlog [update_streaming] sid=    1
+dlog [update_streaming] p.uid=  7494
+dlog [update_streaming] amount= 4       , time= 85      , line= 1019
+            ]]
                     break
                 end
             end
@@ -2706,6 +2754,7 @@ function Player:_die()
         end
     end
 end
+-- mark! Player:update(dt)
 function Player:update(dt)
     self.trigFrame=self.trigFrame+dt*60
     if self.alive then
@@ -2750,7 +2799,10 @@ function Player:update(dt)
                         frameDelta<200 and 10 or
                         20
                     do
+                        -- mark! call update_streaming
                         update_streaming(self)
+    -- -- print("dlog [Player:update] self=", type(self)=='table' and TABLE.dump(self) or tostring(self))
+                        -- mark! call update_alive
                         update_alive(self,dt)
                     end
                 end

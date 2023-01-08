@@ -428,6 +428,10 @@ local actMap={
 local function wsSend(act,data)
     -- print(("Send: $1 -->"):repD(act))
     -- print(("Send: $1 -->"):repD(act)) print(type(data)=='table' and TABLE.dump(data) or tostring(data),"\n")
+    --[[
+Send: 1206 -->
+CQAAAAAA
+    ]]
     WS.send('game',JSON.encode{
         action=assert(act),
         data=data,
@@ -451,14 +455,39 @@ local function _playerLeaveRoom(uid)
     end
 end
 
---Push stream data to players
+--[[
+    mark! NET.pumpStream call pumpRecording
+    Push stream data to players
+]]
 function NET.pumpStream(d)
+    -- print("[NET.pumpStream]", type(d)=='table' and TABLE.dump(d) or tostring(d),"\n")
+    --[[
+        [NET.pumpStream]    return {
+        data='CQAAAAAA',
+        playerId=7941,
+        }
+
+        [NET.pumpStream]    return {
+                data='BcD+8IKsggEAAAAA',
+                playerId=7941,
+        }
+    ]]
     if d.playerId==USER.uid then return end
     for _,P in next,PLAYERS do
         if P.uid==d.playerId then
             local res,stream=pcall(love.data.decode,'string','base64',d.data)
             if res then
                 DATA.pumpRecording(stream,P.stream)
+    -- print("[NET.pumpStream] stream=", type(P.stream)=='table' and TABLE.dump(P.stream) or tostring(P.stream),"\n")
+    --[[
+        [NET.pumpStream] stream=        return {
+        9,
+        0,
+        9,
+        0,
+        ...
+        }
+    ]]
             else
                 MES.new('error',"Bad stream from ".._getFullName(P.uid),.1)
             end
@@ -571,7 +600,16 @@ end
 function NET.player_setState(state)-- not used
     wsSend(actMap.player_setState,state)
 end
+--[[
+    mark! NET.player_stream
+    ]]
 function NET.player_stream(stream)
+    -- print("[NET.player_stream] stream=", type(stream)=='table' and TABLE.dump(stream) or tostring(stream),"\n")
+    --[[
+[NET.player_stream] stream=
+
+[NET.player_stream] stream=     �������
+    ]]
     wsSend(actMap.player_stream,love.data.encode('string','base64',stream))
 end
 function NET.player_setPlayMode(mode)
@@ -721,6 +759,9 @@ function NET.wsCallBack.player_setHost(body)
 end
 function NET.wsCallBack.player_setState(body)-- not used
 end
+--[[
+    mark! NET.wsCallBack.player_stream call pumpStream
+]]
 function NET.wsCallBack.player_stream(body)
     if SCN.cur~='net_game' then return end
     NET.pumpStream(body.data)
@@ -834,10 +875,37 @@ function NET.ws_update()
                 msg=JSON.decode(msg)
                 -- print(("Recv:      <-- $1 err:$2"):repD(msg.action,msg.errno))
                 -- print(("Recv:      <-- $1 err:$2"):repD(msg.action,msg.errno)) print(TABLE.dump(msg),"\n")
+                --[[
+Deafult
+Recv:      <-- 1206 err:0
+return {
+        data={
+                data='DwAAAAAA',
+                playerId=7494,
+        },
+        action=1206,
+        errno=0,
+}
+
+When Attack                
+Recv:      <-- 1206 err:0
+Recv:      <-- 1206 err:0
+return {
+        data={
+                data='A8D38IKsggIAAAAA',
+                playerId=7494,
+        },
+        action=1206,
+        errno=0,
+}
+                ]]
                 if msg.errno~=0 then
                     parseError(msg.message~=nil and msg.message or msg)
                 else
                     local f=NET.wsCallBack[actMap[msg.action]]
+                    --[[
+                        mark! NET.wsCallBack call msg
+                    ]]
                     if f then f(msg) end
                 end
             else
